@@ -1,2 +1,7 @@
-# FortLogReader
-"Read" the Fortnite Logs, not good yet
+# Fortnite Logs Reader
+
+Позволяет прочитать логи из игры Fortnite.
+
+СДЕЛАТЬ:
+1. Перевод на русский язык. ❌
+2. Адаптация вместе с EZFNDEV. ✅
