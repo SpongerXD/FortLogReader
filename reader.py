@@ -14,7 +14,7 @@ blacklist = json.loads(open('blacklist.json').read())
 CurrentPackets = {'InPackets': [], 'OutPackets': []}
 RPC_Functions = json.loads(open('RPC_Functions.json').read())
 
-# TODO: Parse the XMPP, maybe there is a module to do it
+# СДЕЛАТЬ: Парсер XMPP (возможно как модуль, Beat_YT + EZFN)
 def parse_xmpp(message: str):
     return {}
 
@@ -30,11 +30,11 @@ def parse(filepath: str):
         try:
             lines = open(f'{logs_dir}/{filepath}', 'rb').read().decode('utf8').split('\r\n')
         except:
-            print(f'{filepath} can not be read!')
+            print(f'{filepath} путь невозможно открыть!')
             logs_read += 1
             file_count -= 1
             return
-        # print(f'{filepath} might not be read correctly!')
+        print(f'{filepath} путь невозможно прочитать!')
 
     if not 'Log file open' in lines[0]:
         logs_read += 1
@@ -42,7 +42,7 @@ def parse(filepath: str):
         return
 
     try:
-        # CreatedAt = datetime.datetime.strptime(lines[0].split('Log file open, ')[1].strip(),'%m/%d/%y %H:%M:%S')
+        CreatedAt = datetime.datetime.strptime(lines[0].split('Log file open, ')[1].strip(),'%m/%d/%y %H:%M:%S')
         CreatedAt = lines[0].split('Log file open, ')[1].strip()
     except Exception as e:
         CreatedAt = 'Failed to parse'
@@ -54,25 +54,25 @@ def parse(filepath: str):
             if any(b in line for b in blacklist):
                 continue
 
-            # Detect and remove the timestap
+            # СДЕЛАТЬ: Обнаружение и убирание штампа времени (Beat_YT + EZFN)
             ActionNumber = None
             if line.startswith('['):
                 try:
                     time = datetime.datetime.strptime(line.split('[')[1].split(']')[0],'%Y.%m.%d-%H.%M.%S:%f')
                 except:
                     continue
-                # Read the "Command Number" called __LINE__ in UE4
+                # Прочитать "Command Number" называемой __LINE__ в Unreal Engine 4
                 ActionNumber = int(line.split('[')[2].split(']')[0].strip())
                 line = ']'.join(line.split(']')[2:])
 
                 if not lines[idx + 1].startswith('['):
-                    # TODO: Skip the next line in the for loop and parse this too, probably a response with next lines
-                    print(f'Failed to parse next line! {line}')
+                    # СДЕЛАТЬ: Пропуск следующей строки в цикле for и ее анализ, вероятно, ответ со другими строчками. (Beat_YT + EZFN)
+                    print(f'Невозможно парсить эту строку, идем дальше! {line}')
 
             if ActionNumber != None and not ActionNumber in versions[Build]["Actions"]:
                 versions[Build]["Actions"][ActionNumber] = {}
 
-            # Check if the line has a response
+            # СДЕЛАТЬ: Проверить есть ли здесь запрос (Beat_YT + EZFN)
             if ' response=' in line and 'url=' in line and Build:
                 try:
                     url = line.split('url=')[1].split(' ')[0]
@@ -97,15 +97,15 @@ def parse(filepath: str):
                 except Exception as e:
                     print(f'Failed to parse this line: {line}\nError: {e}')
                 continue
-                # Skip next steps, we are done with this line
+                # Пропуск следующих шагов
 
-            # Get the "CategoryName"
+            # Получение элемента "CategoryName"
             if line.split(':')[0].startswith('[20'):
                 CategoryName = line.split(']')[2].split(':')[0]
             else:
                 CategoryName = line.split(':')[0]
 
-            # This does not always exist
+            # Если этого не существует
             try:
                 LogSubType = line.split(':')[1].strip()
                 Result = ':'.join(line.split(':')[2:]).strip()
@@ -113,11 +113,11 @@ def parse(filepath: str):
                 LogSubType = ""
                 Result = ""
             
-            # Get by CategoryName
+            # Взять из лого "CategoryName"
             if CategoryName == 'LogInit':
                 if LogSubType == 'Build':
                     Build = Result
-                    versions[Build] = {'Build': Build, 'CreatedAt': CreatedAt, 'Actions': {}, 'Init': {}, 'Matches': {}}
+                    versions[Build] = {'Build': Build, 'Created': CreatedAt, 'Actions': {}, 'Init': {}, 'Matches': {}}
                 elif Build:
                     if LogSubType.startswith('- '):
                         continue
@@ -181,14 +181,14 @@ def parse(filepath: str):
                         versions[Build]["Actions"][ActionNumber]['XMPP']['UserID'] = line.split('user = ')[1].split(':')[0]
                         versions[Build]["Actions"][ActionNumber]['XMPP']['Platform'] = line.split('user = ')[1].split(':')[3]
                     elif LogSubType == 'VeryVerbose':
-                        # Sent
+                        # Отправка
                         if 'xmpp debug: RECV:' in line:
                             versions[Build]["Actions"][ActionNumber]['XMPP']['Messages'].append({
                                 'Incoming': True,
                                 'Outgoing': False,
                                 'RawMessage': line.split('xmpp debug: RECV: ')[1]
                             })
-                        # Received
+                        # Получено
                         elif 'conn debug: SENT:' in line:
                             versions[Build]["Actions"][ActionNumber]['XMPP']['Messages'].append({
                                 'Incoming': False,
@@ -218,7 +218,7 @@ def parse(filepath: str):
                         versions[Build]["Actions"][ActionNumber]['Security'] = {'Warnings': []}
                     if LogSubType == 'Warning':
                         # PacketHandler
-                        # TODO: Add more / enable logging all
+                        # СДЕЛАТЬ: Добавить больше / логирование ВСЕГО (Beat_YT + EZFN)
                         IP = line.split(':')[2].strip()
                         Port = line.split(':')[3].strip()
                         versions[Build]["Actions"][ActionNumber]['Security']['Warnings'].append({
@@ -236,7 +236,7 @@ def parse(filepath: str):
                     elif line == 'LogContentBeacon: Contentbeacon RequestConnection() Succesfully Connected':
                         if 'Beacon' in versions[Build]["Actions"][ActionNumber]:
                             versions[Build]["Actions"][ActionNumber]['Beacon']['Connected'] = True
-                    # Errors
+                    # Ошибки
                     elif line == 'LogContentBeacon: AContentBeaconClient OnFailure Failed to connect':
                         if not 'Beacon' in versions[Build]["Actions"][ActionNumber]:
                             versions[Build]["Actions"][ActionNumber]['Beacon'] = {'Errors': [], 'Warning': []}
@@ -318,7 +318,6 @@ def parse(filepath: str):
                     elif 'Replicate' in line:
                         Actor = '_'.join(line.split('Replicate ')[1].split(', ')[0].split('_')[:-1])
                     elif 'Sent RPC: ' in line:
-                        # https://github.com/EpicGames/UnrealEngine/blob/2bf1a5b83a7076a0fd275887b373f8ec9e99d431/Engine/Source/Runtime/Engine/Private/NetDriver.cpp#L2319
                         RPC_Type = line.split('Sent RPC: ')[1].split(' ')[0]
                         RPC_Path = line.split('Sent RPC: ')[1].split(' ')[1].split('.')[0]
                         RPC_Function_Name = line.split('Sent RPC: ')[1].split(' ')[1].split('::')[1].split(' ')[0]
@@ -560,7 +559,7 @@ def parse(filepath: str):
                 elif CategoryName == 'LogMatchmakingServiceClient':
                     if not 'MatchmakingServiceClient' in versions[Build]["Actions"][ActionNumber]:
                         versions[Build]["Actions"][ActionNumber]['MatchmakingServiceClient'] = {'HandleStatusUpdateMessage': {'Messages': []}, 'HandleQueuedStatusUpdate': [], 'ChangeState': []}
-                    # Received
+                    # Получено
                     if line.startswith('LogMatchmakingServiceClient: Verbose: HandleWebSocketMessage - Received message'):
                         info = {}
                         try:
@@ -623,7 +622,7 @@ def parse(filepath: str):
                             'Type': line.split('Playlist_')[-1].split(' (')[1].split(')')[0]
                         })
                 elif CategoryName == 'LogMatchAnalytics':
-                    if not 'Match' in versions[Build]["Actions"][ActionNumber]: # Analytics
+                    if not 'Match' in versions[Build]["Actions"][ActionNumber]: # Аналитика
                         versions[Build]["Actions"][ActionNumber]['Match'] = {'Analytics': {'Checkpoints': {}}}
                     
                     if LogSubType == 'DUMPCHECKPOINTS':
@@ -663,9 +662,9 @@ def parse(filepath: str):
                         })
                 else:
                     pass
-                    # print(f'Unknown CategoryName: {CategoryName}')
+                    print(f'Парснута категория: {CategoryName}')
         except Exception as e:
-            pass # print(f'Failed to parse this line: {line} Error: {e}\n')        
+            pass  
 
     logs_read += 1
     file_count -= 1
@@ -680,13 +679,11 @@ for file in os.listdir(logs_dir):
 while (logs_read != len(os.listdir(logs_dir))):
     time.sleep(1)
 
-# If we do not do it at the end there might be issues if logs have to same Build
-# Remove all unused actions
 for Build in list(versions.keys()):
     for k, v in dict(versions[Build]["Actions"]).items():
         if not v:
             del versions[Build]["Actions"][k]
 
 open('Versions.json', 'w+').write(json.dumps(versions, indent=2))
-print(f'Total Versions Parsed: {len(versions)}')
+print(f'Всего версия парснуто: {len(versions)}')
 open('RPC_Functions.json', 'w+').write(json.dumps(RPC_Functions, indent=2))
