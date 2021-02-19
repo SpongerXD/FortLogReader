@@ -1,4 +1,4 @@
-# Fortnite Logs Reader
+# Fortnite Logs Reader (Авторы: EZFN + Beat_YT)
 
 Позволяет прочитать логи из игры Fortnite, в красивом виде.
 
