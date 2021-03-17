@@ -1,0 +1,1 @@
+Вставьте лог в данную папку (AppData_Local_FortniteGame_Saved_Logs), перед запуском удалите данный файл!
